@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+
+# Env
+.env
+.env.*
+
+# Artifacts (keep folder via artifacts/.gitkeep)
+artifacts/**
+!artifacts/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

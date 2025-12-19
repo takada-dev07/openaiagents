@@ -1,0 +1,31 @@
+{
+  "name": "openaiagents (Python 3.11)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceFolder": "/workspaces/openaiagents",
+  "postCreateCommand": "pip install -e \".[dev]\" && pre-commit install || true",
+  "forwardPorts": [8000],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": [
+          "tests"
+        ],
+        "ruff.enable": true,
+        "ruff.organizeImports": true,
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}
+
+

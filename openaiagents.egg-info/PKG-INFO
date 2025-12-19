@@ -1,3 +1,27 @@
+Metadata-Version: 2.4
+Name: openaiagents
+Version: 0.1.0
+Summary: Python + DevContainer LLM Agent learning sandbox (FastAPI, PPTX, workflow DAG)
+Author: You
+License: MIT
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0,>=0.110
+Requires-Dist: uvicorn[standard]<1.0,>=0.27
+Requires-Dist: pydantic<3.0,>=2.6
+Requires-Dist: python-pptx<1.0,>=0.6.23
+Requires-Dist: Pillow<12.0,>=10.2
+Requires-Dist: httpx<1.0,>=0.27
+Requires-Dist: python-dotenv<2.0,>=1.0
+Requires-Dist: networkx<4.0,>=3.2
+Requires-Dist: rich<14.0,>=13.7
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.0; extra == "dev"
+Requires-Dist: ruff<0.9,>=0.6; extra == "dev"
+Requires-Dist: mypy<2.0,>=1.8; extra == "dev"
+Requires-Dist: pre-commit<5.0,>=3.6; extra == "dev"
+Requires-Dist: types-Pillow>=10.2.0.20240520; extra == "dev"
+
 # openaiagents（Python + venv で学ぶ LLM Agent 最小環境）
 
 このリポジトリは、Python 仮想環境（venv）で以下を **ローカル実行しながら学ぶ** ための最小構成です。
