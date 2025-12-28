@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -21,9 +22,24 @@ class ImageService:
     def __init__(self, *, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
         self.log = get_logger(__name__)
-        self.client = OpenAIClient(api_key=self.settings.openai_api_key) if self.settings.openai_api_key else None
+        self.client = (
+            OpenAIClient(
+                api_key=self.settings.openai_api_key,
+                organization_id=self.settings.openai_organization_id,
+                project_id=self.settings.openai_project_id,
+            )
+            if self.settings.openai_api_key
+            else None
+        )
 
-    async def generate(self, *, prompt: str, size: str = "1024x1024", transparent: bool = False) -> ImageGenerateResult:
+    async def generate(
+        self,
+        *,
+        prompt: str,
+        size: str = "1024x1024",
+        transparent: bool = False,
+        params: dict[str, Any] | None = None,
+    ) -> ImageGenerateResult:
         trace_id = new_trace_id()
         out_dir = self.settings.artifact_dir / "images" / trace_id
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -32,19 +48,38 @@ class ImageService:
         out_path = out_dir / "image.png"
 
         if self.client is None:
-            self._generate_dummy_image(out_path=out_path, prompt=prompt, size=size, transparent=transparent)
-            self.log.info("Generated dummy image", extra={"trace_id": trace_id, "path": str(out_path)})
+            self._generate_dummy_image(
+                out_path=out_path, prompt=prompt, size=size, transparent=transparent
+            )
+            self.log.info(
+                "Generated dummy image",
+                extra={"trace_id": trace_id, "path": str(out_path)},
+            )
         else:
-            res = await self.client.generate_image(prompt=prompt, size=size, transparent=transparent)
+            payload: dict[str, Any] = dict(params or {})
+            # Ensure required fields are present (API contract).
+            payload["prompt"] = prompt
+            payload["size"] = size
+            # Prefer explicit model, otherwise use server default.
+            if not payload.get("model"):
+                payload["model"] = self.settings.openai_image_model
+            # Local compatibility: allow `transparent=true` to map to best-effort background control.
+            if transparent and "background" not in payload:
+                payload["background"] = "transparent"
+            res = await self.client.generate_image(payload=payload)
             out_path.write_bytes(res.png_bytes)
             self.log.info(
                 "Generated image via OpenAI",
                 extra={"trace_id": trace_id, "path": str(out_path), "model": res.model},
             )
 
-        return ImageGenerateResult(trace_id=trace_id, artifact_id=artifact_id, image_path=str(out_path))
+        return ImageGenerateResult(
+            trace_id=trace_id, artifact_id=artifact_id, image_path=str(out_path)
+        )
 
-    def _generate_dummy_image(self, *, out_path: Path, prompt: str, size: str, transparent: bool) -> None:
+    def _generate_dummy_image(
+        self, *, out_path: Path, prompt: str, size: str, transparent: bool
+    ) -> None:
         try:
             w_s, h_s = size.lower().split("x", 1)
             w, h = int(w_s), int(h_s)
@@ -64,8 +99,8 @@ class ImageService:
 
         text = f"Dummy Image\\n{size}\\n{prompt[:200]}"
         margin = 40
-        draw.multiline_text((margin, margin), text, fill=(20, 20, 20), font=font, spacing=10)
+        draw.multiline_text(
+            (margin, margin), text, fill=(20, 20, 20), font=font, spacing=10
+        )
         draw.rectangle([(10, 10), (w - 10, h - 10)], outline=(120, 120, 120), width=6)
         img.save(out_path, format="PNG")
-
-

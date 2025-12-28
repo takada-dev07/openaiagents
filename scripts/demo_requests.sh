@@ -19,7 +19,7 @@ echo
 echo "== images/generate =="
 IMG_JSON="$(curl -sS -X POST "${BASE_URL}/images/generate" \
   -H "Content-Type: application/json" \
-  -d '{"prompt":"日本語のデモ画像。青い背景、白い文字で『学習用』","size":"512x512","transparent":false}')"
+  -d '{"prompt":"日本語のデモ画像。青い背景、白い文字で『学習用』","size":"1024x1024","model":"gpt-image-1","quality":"high","transparent":false}')"
 echo "${IMG_JSON}" | cat
 echo
 
@@ -79,7 +79,7 @@ payload = {
   "workflow": {
     "nodes": [
       {"id":"outline","tool":"outline","params":{"task":{"$ref":"input.task"}}, "retry":0, "timeout_sec":10},
-      {"id":"image","tool":"generate_image","params":{"prompt":{"$ref":"input.task"},"size":"512x512","transparent":False}, "retry":1, "timeout_sec":60},
+      {"id":"image","tool":"generate_image","params":{"prompt":{"$ref":"input.task"},"size":"1024x1024","model":"gpt-image-1","quality":"high","transparent":False}, "retry":1, "timeout_sec":60},
       {"id":"pptx","tool":"render_pptx","params":{"title":{"$ref":"results.outline.title"},"slides":{"$ref":"results.outline.slides"},"image_path":{"$ref":"results.image.image_path"}}, "retry":0, "timeout_sec":60},
       {"id":"explain","tool":"explain_pptx","params":{"pptx_path":{"$ref":"results.pptx.pptx_path"}}, "retry":0, "timeout_sec":60}
     ],

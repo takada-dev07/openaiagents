@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthResponse(BaseModel):
@@ -21,9 +21,20 @@ class AgentRunResponse(BaseModel):
 
 
 class ImageGenerateRequest(BaseModel):
+    # Allow forward-compatible parameters for OpenAI Images API.
+    # Unknown fields will be passed through to OpenAI (best-effort).
+    model_config = ConfigDict(extra="allow")
+
     prompt: str
     size: str = Field(default="1024x1024", description="例: 1024x1024")
     transparent: bool = False
+    model: str | None = Field(default=None, description="例: gpt-image-1（将来のモデル名も可）")
+    quality: str | None = Field(default=None, description="例: low / medium / high（モデル依存）")
+    style: str | None = Field(default=None, description="例: vivid / natural（モデル依存）")
+    n: int | None = Field(default=None, description="生成枚数（モデル依存）")
+    seed: int | None = Field(default=None, description="シード（モデル依存）")
+    response_format: str | None = Field(default=None, description="例: b64_json / url（モデル依存）")
+    background: str | None = Field(default=None, description="例: transparent（モデル依存）")
 
 
 class ImageGenerateResponse(BaseModel):

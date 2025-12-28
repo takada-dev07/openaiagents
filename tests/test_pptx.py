@@ -4,13 +4,16 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.core.config import get_settings
+from app.main import create_app
 
 
-def test_pptx_render_and_explain(tmp_path: Path) -> None:
+def test_pptx_render_and_explain(tmp_path: Path, monkeypatch) -> None:
     # Ensure artifacts go to temp for test isolation
     # (config reads env once; this test assumes default artifacts path is writable)
-    client = TestClient(app)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    get_settings.cache_clear()
+    client = TestClient(create_app())
 
     render_payload = {
         "title": "テスト資料",

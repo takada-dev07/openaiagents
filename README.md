@@ -51,6 +51,10 @@ cp .env.example .env
 
 `.env` を編集してください（`OPENAI_API_KEY` は空でもOK。空の場合は画像生成がダミー画像になります）。
 
+- `OPENAI_IMAGE_MODEL`: 画像生成に使うモデル（未指定時は `gpt-image-1`）
+- `OPENAI_ORGANIZATION_ID`: Organization ID（複数Orgがある場合に指定すると安定）
+- `OPENAI_PROJECT_ID`: Project ID（必要なら指定）
+
 > NOTE: この環境では `.env.example` がエディタ上でフィルタされる場合があります。  
 > その場合でもファイル自体は存在しているので、手元では `ls -la` 等で確認できます。
 
@@ -97,7 +101,7 @@ curl -sS http://localhost:8000/health
 ```bash
 curl -sS -X POST http://localhost:8000/images/generate \
   -H 'Content-Type: application/json' \
-  -d '{"prompt":"日本語のテスト画像","size":"512x512","transparent":false}'
+  -d '{"prompt":"高市早苗","size":"1024x1024","model":"gpt-image-1.5","quality":"high","background":"transparent"}'
 ```
 
 ### PPTX生成

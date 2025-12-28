@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.agents.agent_runner import AgentRunner
 from app.core.config import get_settings
@@ -19,6 +19,7 @@ from app.models.schemas import (
     WorkflowRunResponse,
 )
 from app.services.image_service import ImageService
+from app.services.openai_client import OpenAIRequestError
 from app.services.pptx_service import PptxService
 from app.services.workflow_service import WorkflowService
 
@@ -42,19 +43,37 @@ def create_app() -> FastAPI:
     @app.post("/agent/run", response_model=AgentRunResponse)
     async def agent_run(req: AgentRunRequest) -> AgentRunResponse:
         res = await agent.run(task=req.task, context=req.context)
-        return AgentRunResponse(result=res.result, trace_id=res.trace_id, artifacts=res.artifacts)
+        return AgentRunResponse(
+            result=res.result, trace_id=res.trace_id, artifacts=res.artifacts
+        )
 
     @app.post("/images/generate", response_model=ImageGenerateResponse)
     async def images_generate(req: ImageGenerateRequest) -> ImageGenerateResponse:
-        res = await image_service.generate(prompt=req.prompt, size=req.size, transparent=req.transparent)
+        try:
+            res = await image_service.generate(
+                prompt=req.prompt,
+                size=req.size,
+                transparent=req.transparent,
+                params=req.model_dump(exclude_none=True),
+            )
+        except OpenAIRequestError as e:
+            # Bubble up the OpenAI error body for debugging.
+            raise HTTPException(
+                status_code=502,
+                detail={"openai_status": e.status_code, "openai_body": e.body},
+            ) from e
         return ImageGenerateResponse(
-            image_path=res.image_path, artifact_id=res.artifact_id, trace_id=res.trace_id
+            image_path=res.image_path,
+            artifact_id=res.artifact_id,
+            trace_id=res.trace_id,
         )
 
     @app.post("/pptx/render", response_model=PptxRenderResponse)
     async def pptx_render(req: PptxRenderRequest) -> PptxRenderResponse:
         res = await pptx_service.render_deck(title=req.title, slides=req.slides)
-        return PptxRenderResponse(pptx_path=res.pptx_path, trace_id=res.trace_id, artifacts=res.artifacts)
+        return PptxRenderResponse(
+            pptx_path=res.pptx_path, trace_id=res.trace_id, artifacts=res.artifacts
+        )
 
     @app.post("/pptx/explain", response_model=PptxExplainResponse)
     async def pptx_explain(req: PptxExplainRequest) -> PptxExplainResponse:
@@ -69,12 +88,12 @@ def create_app() -> FastAPI:
     @app.post("/workflow/run", response_model=WorkflowRunResponse)
     async def workflow_run(req: WorkflowRunRequest) -> WorkflowRunResponse:
         res = await workflow_service.run(workflow=req.workflow, input_data=req.input)
-        return WorkflowRunResponse(trace_id=res.trace_id, results=res.results, log_path=res.log_path)
+        return WorkflowRunResponse(
+            trace_id=res.trace_id, results=res.results, log_path=res.log_path
+        )
 
     log.info("App created", extra={"artifact_dir": str(settings.artifact_dir)})
     return app
 
 
 app = create_app()
-
-

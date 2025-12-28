@@ -5,11 +5,14 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.core.config import get_settings
+from app.main import create_app
 
 
-def test_workflow_run_creates_log() -> None:
-    client = TestClient(app)
+def test_workflow_run_creates_log(monkeypatch) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    get_settings.cache_clear()
+    client = TestClient(create_app())
 
     payload = {
         "workflow": {
